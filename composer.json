@@ -27,6 +27,10 @@
     {
         "phpunit/phpunit": "4.*"
     },
+    "require":
+    {
+        "rollbar/rollbar": "~1.3"
+    },
     "extra": {
         "nails": {
             "name": "Default",
