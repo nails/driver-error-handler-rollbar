@@ -2,6 +2,7 @@
 
 namespace Nails\Common\ErrorHandler;
 
+use Nails\Common\Exception\NailsException;
 use Nails\Common\Interfaces\ErrorHandlerDriver;
 use Nails\Environment;
 use Nails\Factory;
@@ -10,39 +11,38 @@ use Rollbar\Payload\Level;
 class Rollbar implements ErrorHandlerDriver
 {
     /**
+     * Whether the driver is configured or not
+     * @var bool
+     */
+    protected static $bIsAvailable = false;
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Instantiates the driver
+     *
+     * @throws NailsException
      * @return void
      */
     public static function init()
     {
-        $oErrorHandler = Factory::service('ErrorHandler');
-
-        if (!defined('DEPLOY_ROLLBAR_ACCESS_TOKEN')) {
-
-            $sSubject = 'Rollbar is not configured correctly';
-            $sMessage = 'Rollbar is enabled but DEPLOY_ROLLBAR_ACCESS_TOKEN is not defined.';
-
-            $oErrorHandler->sendDeveloperMail($sSubject, $sMessage);
-            $oErrorHandler->showFatalErrorScreen($sSubject, $sMessage);
+        /**
+         * If the Rollbar token is provided then we'll instantiate the appropriate classes; if it's not
+         * then we'll not do anything and let errors bubble through to the default handler.
+         */
+        if (defined('DEPLOY_ROLLBAR_ACCESS_TOKEN')) {
+            static::$bIsAvailable = true;
+            \Rollbar\Rollbar::init(
+                [
+                    'access_token' => DEPLOY_ROLLBAR_ACCESS_TOKEN,
+                    'environment'  => Environment::get(),
+                    'person_fn'    => '\Nails\Common\ErrorHandler\Rollbar::getPerson',
+                ],
+                false,
+                false,
+                false
+            );
         }
-
-        if (!class_exists('\Rollbar\Rollbar')) {
-
-            $sSubject = 'Rollbar is not configured properly.';
-            $sMessage = 'Rollbar is set as the error handler, but the Rollbar class ';
-            $sMessage .= 'could not be found. Ensure that it is in composer.json.';
-
-            $oErrorHandler->sendDeveloperMail($sSubject, $sMessage);
-            $oErrorHandler->showFatalErrorScreen($sSubject, $sMessage);
-        }
-
-        $aConfig = [
-            'access_token' => DEPLOY_ROLLBAR_ACCESS_TOKEN,
-            'environment'  => Environment::get(),
-            'person_fn'    => '\Nails\Common\ErrorHandler\Rollbar::getPerson',
-        ];
-
-        \Rollbar\Rollbar::init($aConfig, false, false, false);
     }
 
     // --------------------------------------------------------------------------
@@ -59,25 +59,26 @@ class Rollbar implements ErrorHandlerDriver
      */
     public static function error($iErrorNumber, $sErrorString, $sErrorFile, $iErrorLine)
     {
-        //  Ignore strict errors
         if ($iErrorNumber == E_STRICT) {
             return;
         }
 
-        //  Send report to Rollbar
-        \Rollbar\Rollbar::log(
-            Level::WARNING,
-            $sErrorString,
-            [
-                'error_number' => $iErrorNumber,
-                'file'         => $sErrorFile,
-                'line'         => $iErrorLine,
-            ]
-        );
+        if (static::$bIsAvailable) {
+            \Rollbar\Rollbar::log(
+                Level::WARNING,
+                $sErrorString,
+                [
+                    'error_number' => $iErrorNumber,
+                    'file'         => $sErrorFile,
+                    'line'         => $iErrorLine,
+                ]
+            );
+        }
 
-        //  Let this bubble to the normal Nails error handler
-        //  @todo (Pablo - 2018-03-07) - fix this
-        Nails::error($iErrorNumber, $sErrorString, $sErrorFile, $iErrorLine);
+        //  Bubble to the default driver
+        $oErrorHandler        = Factory::service('ErrorHandler');
+        $sDefaultHandlerClass = $oErrorHandler->getDefaultDriverClass();
+        $sDefaultHandlerClass::error($iErrorNumber, $sErrorString, $sErrorFile, $iErrorLine);
     }
 
     // --------------------------------------------------------------------------
@@ -91,34 +92,14 @@ class Rollbar implements ErrorHandlerDriver
      */
     public static function exception($oException)
     {
-        \Rollbar\Rollbar::log(Level::ERROR, $oException);
-
-        $oDetails = (object) [
-            'type' => get_class($oException),
-            'code' => $oException->getCode(),
-            'msg'  => $oException->getMessage(),
-            'file' => $oException->getFile(),
-            'line' => $oException->getLine(),
-        ];
-
-        $sMessage = 'Uncaught Exception with message "' . $oDetails->msg . '" and code "';
-        $sMessage .= $oDetails->code . '" in ' . $oDetails->file . ' on line ' . $oDetails->line;
-
-        //  Show we log the item?
-        if (function_exists('config_item') && config_item('log_threshold') != 0) {
-            log_message('error', $sMessage);
+        if (static::$bIsAvailable) {
+            \Rollbar\Rollbar::log(Level::ERROR, $oException);
         }
 
-        //  Show something to the user
-        if (Environment::not('PRODUCTION')) {
-            $sSubject = 'Uncaught Exception';
-        } else {
-            $sSubject = '';
-            $sMessage = '';
-        }
-
-        $oErrorHandler = Factory::service('ErrorHandler');
-        $oErrorHandler->showFatalErrorScreen($sSubject, $sMessage, $oDetails);
+        //  Bubble to the default driver
+        $oErrorHandler        = Factory::service('ErrorHandler');
+        $sDefaultHandlerClass = $oErrorHandler->getDefaultDriverClass();
+        $sDefaultHandlerClass::exception($oException);
     }
 
     // --------------------------------------------------------------------------
@@ -129,24 +110,14 @@ class Rollbar implements ErrorHandlerDriver
      */
     public static function fatal()
     {
-        \Rollbar\Rollbar::fatalHandler();
-
-        $aError = error_get_last();
-
-        if (!is_null($aError) && $aError['type'] === E_ERROR) {
-
-            //  Show something to the user
-            if (Environment::not('PRODUCTION')) {
-                $sSubject = 'Fatal Error';
-                $sMessage = $aError['message'] . ' in ' . $aError['file'] . ' on line ' . $aError['line'];
-            } else {
-                $sSubject = '';
-                $sMessage = '';
-            }
-
-            $oErrorHandler = Factory::service('ErrorHandler');
-            $oErrorHandler->showFatalErrorScreen($sSubject, $sMessage);
+        if (static::$bIsAvailable) {
+            \Rollbar\Rollbar::fatalHandler();
         }
+
+        //  Bubble to the default driver
+        $oErrorHandler        = Factory::service('ErrorHandler');
+        $sDefaultHandlerClass = $oErrorHandler->getDefaultDriverClass();
+        $sDefaultHandlerClass::fatal();
     }
 
     // --------------------------------------------------------------------------
