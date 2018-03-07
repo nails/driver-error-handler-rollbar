@@ -64,8 +64,7 @@ class Rollbar implements ErrorHandlerDriver
         }
 
         if (static::$bIsAvailable) {
-            \Rollbar\Rollbar::log(
-                Level::WARNING,
+            \Rollbar\Rollbar::warning(
                 $sErrorString,
                 [
                     'error_number' => $iErrorNumber,
@@ -93,7 +92,7 @@ class Rollbar implements ErrorHandlerDriver
     public static function exception($oException)
     {
         if (static::$bIsAvailable) {
-            \Rollbar\Rollbar::log(Level::ERROR, $oException);
+            \Rollbar\Rollbar::error($oException);
         }
 
         //  Bubble to the default driver
@@ -111,7 +110,21 @@ class Rollbar implements ErrorHandlerDriver
     public static function fatal()
     {
         if (static::$bIsAvailable) {
-            \Rollbar\Rollbar::fatalHandler();
+
+            $aError = error_get_last();
+
+            if (!is_null($aError) && $aError['type'] === E_ERROR) {
+                \Rollbar\Rollbar::critical(
+                    'Fatal error: ' . $aError['message'] . ' in ' . $aError['file'] . ' on line ' . $aError['line'],
+                    [
+                        'type' => 'Fatal Error',
+                        'code' => $aError['type'],
+                        'msg'  => $aError['message'],
+                        'file' => $aError['file'],
+                        'line' => $aError['line'],
+                    ]
+                );
+            }
         }
 
         //  Bubble to the default driver
@@ -129,9 +142,9 @@ class Rollbar implements ErrorHandlerDriver
     public static function getPerson()
     {
         return [
-            'id'       => activeUser('id'),
-            'username' => activeUser('username'),
-            'email'    => activeUser('email'),
+            'id'       => activeUser('id') ?: null,
+            'username' => activeUser('username') ?: null,
+            'email'    => activeUser('email') ?: null,
         ];
     }
 }
