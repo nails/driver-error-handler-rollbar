@@ -1,6 +1,7 @@
 {
     "name": "nailsapp/driver-error-handler-rollbar",
     "keywords": ["Nails", "Shed Collective", "CodeIgniter", "ErrorHandler", "Driver", "Rollbar"],
+    "homepage": "",
     "description": "This driver provides support for rollbar.com error handling in Nails",
     "license": "MIT",
     "authors":
