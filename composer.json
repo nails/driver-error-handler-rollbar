@@ -1,5 +1,5 @@
 {
-    "name": "nailsapp/driver-error-handler-rollbar",
+    "name": "nails/driver-error-handler-rollbar",
     "keywords": ["Nails", "Shed Collective", "CodeIgniter", "ErrorHandler", "Driver", "Rollbar"],
     "homepage": "",
     "description": "This driver provides support for rollbar.com error handling in Nails",
@@ -35,7 +35,7 @@
         "nails": {
             "name": "Default",
             "type": "driver",
-            "forModule": "nailsapp/common",
+            "forModule": "nails/common",
             "subType": "ErrorHandler",
             "data": {
                 "namespace": "Nails\\Common\\ErrorHandler\\",

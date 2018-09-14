@@ -5,7 +5,7 @@ This driver provides support for reporting errors to rollbar.com
 
 ## Installing
 
-    composer require nailsapp/driver-error-handler-rollbar
+    composer require nails/driver-error-handler-rollbar
 
 
 ## Configure
