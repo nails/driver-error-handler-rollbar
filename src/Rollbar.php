@@ -12,6 +12,7 @@ class Rollbar implements ErrorHandlerDriver
 {
     /**
      * Whether the driver is configured or not
+     *
      * @var bool
      */
     protected static $bIsAvailable = false;
@@ -30,7 +31,7 @@ class Rollbar implements ErrorHandlerDriver
          * If the Rollbar token is provided then we'll instantiate the appropriate classes; if it's not
          * then we'll not do anything and let errors bubble through to the default handler.
          */
-        if (defined('DEPLOY_ROLLBAR_ACCESS_TOKEN')) {
+        if (defined('DEPLOY_ROLLBAR_ACCESS_TOKEN') && !empty(DEPLOY_ROLLBAR_ACCESS_TOKEN)) {
             static::$bIsAvailable = true;
             \Rollbar\Rollbar::init(
                 [
@@ -105,6 +106,7 @@ class Rollbar implements ErrorHandlerDriver
 
     /**
      * Catches fatal errors on shut down
+     *
      * @return void
      */
     public static function fatal()
@@ -137,6 +139,7 @@ class Rollbar implements ErrorHandlerDriver
 
     /**
      * Get's the active user, if any
+     *
      * @return array
      */
     public static function getPerson()
