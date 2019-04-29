@@ -6,7 +6,6 @@ use Nails\Common\Exception\NailsException;
 use Nails\Common\Interfaces\ErrorHandlerDriver;
 use Nails\Environment;
 use Nails\Factory;
-use Rollbar\Payload\Level;
 
 class Rollbar implements ErrorHandlerDriver
 {
@@ -22,8 +21,8 @@ class Rollbar implements ErrorHandlerDriver
     /**
      * Instantiates the driver
      *
-     * @throws NailsException
      * @return void
+     * @throws NailsException
      */
     public static function init()
     {
@@ -51,10 +50,10 @@ class Rollbar implements ErrorHandlerDriver
     /**
      * Called when a PHP error occurs
      *
-     * @param  int    $iErrorNumber The error number
-     * @param  string $sErrorString The error message
-     * @param  string $sErrorFile   The file where the error occurred
-     * @param  int    $iErrorLine   The line number where the error occurred
+     * @param int    $iErrorNumber The error number
+     * @param string $sErrorString The error message
+     * @param string $sErrorFile   The file where the error occurred
+     * @param int    $iErrorLine   The line number where the error occurred
      *
      * @return void
      */
@@ -86,7 +85,7 @@ class Rollbar implements ErrorHandlerDriver
     /**
      * Catches uncaught exceptions
      *
-     * @param  \Exception $oException The caught exception
+     * @param \Exception $oException The caught exception
      *
      * @return void
      */
