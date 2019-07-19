@@ -1,11 +1,17 @@
 {
     "name": "nails/driver-error-handler-rollbar",
-    "keywords": ["Nails", "Shed Collective", "CodeIgniter", "ErrorHandler", "Driver", "Rollbar"],
-    "homepage": "",
+    "keywords": [
+        "Nails",
+        "Shed Collective",
+        "CodeIgniter",
+        "ErrorHandler",
+        "Driver",
+        "Rollbar"
+    ],
+    "homepage": "http://nailsapp.co.uk/driver/error-handler/rollbar",
     "description": "This driver provides support for rollbar.com error handling in Nails",
     "license": "MIT",
-    "authors":
-    [
+    "authors": [
         {
             "name": "Pablo de la Pena",
             "email": "p@nailsapp.co.uk",
@@ -13,22 +19,20 @@
             "role": "Developer"
         }
     ],
-    "support":
-    {
+    "support": {
         "email": "hello@nailsapp.co.uk"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
-    "autoload":
-    {
-        "psr-4": {"Nails\\Common\\ErrorHandler\\": "src/"}
+    "autoload": {
+        "psr-4": {
+            "Nails\\Common\\ErrorHandler\\": "src/"
+        }
     },
-    "require-dev":
-    {
+    "require-dev": {
         "phpunit/phpunit": "7.*"
     },
-    "require":
-    {
+    "require": {
         "rollbar/rollbar": "~1.3"
     },
     "extra": {
