@@ -31,11 +31,11 @@ class Rollbar implements ErrorHandlerDriver
          * If the Rollbar token is provided then we'll instantiate the appropriate classes; if it's not
          * then we'll not do anything and let errors bubble through to the default handler.
          */
-        if (Config::get('DEPLOY_ROLLBAR_ACCESS_TOKEN')) {
+        if (Config::get('ROLLBAR_ACCESS_TOKEN')) {
             static::$bIsAvailable = true;
             \Rollbar\Rollbar::init(
                 [
-                    'access_token' => Config::get('DEPLOY_ROLLBAR_ACCESS_TOKEN'),
+                    'access_token' => Config::get('ROLLBAR_ACCESS_TOKEN'),
                     'environment'  => Environment::get(),
                     'person_fn'    => '\Nails\Common\ErrorHandler\Rollbar::getPerson',
                 ],
