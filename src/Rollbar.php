@@ -2,20 +2,25 @@
 
 namespace Nails\Common\ErrorHandler;
 
+use Nails\Common\ErrorHandler\Rollbar\Log;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Interfaces\ErrorHandlerDriver;
 use Nails\Config;
 use Nails\Environment;
 use Nails\Factory;
 
+/**
+ * Class Rollbar
+ *
+ * @package Nails\Common\ErrorHandler
+ */
 class Rollbar implements ErrorHandlerDriver
 {
-    /**
-     * Whether the driver is configured or not
-     *
-     * @var bool
-     */
-    protected static $bIsAvailable = false;
+    /** @var bool */
+    public static $bIsAvailable = false;
+
+    /** @var Log */
+    protected static $oLogUtility;
 
     // --------------------------------------------------------------------------
 
@@ -49,6 +54,18 @@ class Rollbar implements ErrorHandlerDriver
     // --------------------------------------------------------------------------
 
     /**
+     * Returns whether the driver is properly configured or not
+     *
+     * @return bool
+     */
+    public static function isAvailable(): bool
+    {
+        return static::$bIsAvailable;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Called when a PHP error occurs
      *
      * @param int    $iErrorNumber The error number
@@ -64,20 +81,24 @@ class Rollbar implements ErrorHandlerDriver
             return;
         }
 
-        if (static::$bIsAvailable) {
-            \Rollbar\Rollbar::warning(
-                $sErrorString,
-                [
-                    'error_number' => $iErrorNumber,
-                    'file'         => $sErrorFile,
-                    'line'         => $iErrorLine,
-                ]
-            );
-        }
-
-        //  Bubble to the default driver
+        /** @var \Nails\Common\Service\ErrorHandler $oErrorHandler */
         $oErrorHandler        = Factory::service('ErrorHandler');
         $sDefaultHandlerClass = $oErrorHandler->getDefaultDriverClass();
+
+        if (in_array($sErrorString, $sDefaultHandlerClass::IGNORE)) {
+            return;
+        }
+
+        static::log()::warning(
+            $sErrorString,
+            [
+                'error_number' => $iErrorNumber,
+                'file'         => $sErrorFile,
+                'line'         => $iErrorLine,
+            ]
+        );
+
+        //  Bubble to the default driver
         $sDefaultHandlerClass::error($iErrorNumber, $sErrorString, $sErrorFile, $iErrorLine);
     }
 
@@ -93,9 +114,7 @@ class Rollbar implements ErrorHandlerDriver
      */
     public static function exception($oException, $bHaltExecution = true)
     {
-        if (static::$bIsAvailable) {
-            \Rollbar\Rollbar::error($oException);
-        }
+        static::log()::error($oException);
 
         //  Bubble to the default driver
         $oErrorHandler        = Factory::service('ErrorHandler');
@@ -117,8 +136,13 @@ class Rollbar implements ErrorHandlerDriver
             $aError = error_get_last();
 
             if (!is_null($aError) && $aError['type'] === E_ERROR) {
-                \Rollbar\Rollbar::critical(
-                    'Fatal error: ' . $aError['message'] . ' in ' . $aError['file'] . ' on line ' . $aError['line'],
+                static::log()::critical(
+                    sprintf(
+                        'Fatal error: %s in %s on line %s',
+                        $aError['message'],
+                        $aError['file'],
+                        $aError['line']
+                    ),
                     [
                         'type' => 'Fatal Error',
                         'code' => $aError['type'],
@@ -134,6 +158,22 @@ class Rollbar implements ErrorHandlerDriver
         $oErrorHandler        = Factory::service('ErrorHandler');
         $sDefaultHandlerClass = $oErrorHandler->getDefaultDriverClass();
         $sDefaultHandlerClass::fatal();
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns a Logging interface for manually logging to Rollbar
+     *
+     * @return Log
+     */
+    public static function log(): Log
+    {
+        if (empty(static::$oLogUtility)) {
+            static::$oLogUtility = new Log();
+        }
+
+        return static::$oLogUtility;
     }
 
     // --------------------------------------------------------------------------
