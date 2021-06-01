@@ -21,7 +21,7 @@ class Log
     private static function log(string $sLevel, $mToLog, array $aExtra): void
     {
         if (\Nails\Common\ErrorHandler\Rollbar::isAvailable()) {
-            Rollbar::log($sLevel, $mToLog, $aExtra);
+            Rollbar\Rollbar::log($sLevel, $mToLog, $aExtra);
         }
     }
 
