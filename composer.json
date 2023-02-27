@@ -34,7 +34,7 @@
         "phpunit/phpunit": "9.*"
     },
     "require": {
-        "rollbar/rollbar": "2.*"
+        "rollbar/rollbar": "3.*"
     },
     "extra": {
         "nails": {
