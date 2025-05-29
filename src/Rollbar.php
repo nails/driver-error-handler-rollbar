@@ -77,10 +77,6 @@ class Rollbar implements ErrorHandlerDriver
      */
     public static function error($iErrorNumber, $sErrorString, $sErrorFile, $iErrorLine)
     {
-        if ($iErrorNumber == E_STRICT) {
-            return;
-        }
-
         /** @var \Nails\Common\Service\ErrorHandler $oErrorHandler */
         $oErrorHandler        = Factory::service('ErrorHandler');
         $sDefaultHandlerClass = $oErrorHandler->getDefaultDriverClass();
