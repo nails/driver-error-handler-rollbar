@@ -5,6 +5,7 @@ namespace Nails\Common\ErrorHandler;
 use Nails\Common\ErrorHandler\Rollbar\Log;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Interfaces\ErrorHandlerDriver;
+use Nails\Common\Service\ErrorHandler;
 use Nails\Config;
 use Nails\Environment;
 use Nails\Factory;
@@ -85,14 +86,16 @@ class Rollbar implements ErrorHandlerDriver
             return;
         }
 
-        static::log()::warning(
-            $sErrorString,
-            [
-                'error_number' => $iErrorNumber,
-                'file'         => $sErrorFile,
-                'line'         => $iErrorLine,
-            ]
-        );
+        if (static::$bIsAvailable) {
+            static::log()::warning(
+                $sErrorString,
+                [
+                    'error_number' => $iErrorNumber,
+                    'file'         => $sErrorFile,
+                    'line'         => $iErrorLine,
+                ]
+            );
+        }
 
         //  Bubble to the default driver
         $sDefaultHandlerClass::error($iErrorNumber, $sErrorString, $sErrorFile, $iErrorLine);
@@ -110,7 +113,9 @@ class Rollbar implements ErrorHandlerDriver
      */
     public static function exception($oException, $bHaltExecution = true)
     {
-        static::log()::error($oException);
+        if (static::$bIsAvailable) {
+            static::log()::error($oException);
+        }
 
         //  Bubble to the default driver
         $oErrorHandler        = Factory::service('ErrorHandler');
@@ -151,6 +156,7 @@ class Rollbar implements ErrorHandlerDriver
         }
 
         //  Bubble to the default driver
+        /** @var ErrorHandler $oErrorHandler */
         $oErrorHandler        = Factory::service('ErrorHandler');
         $sDefaultHandlerClass = $oErrorHandler->getDefaultDriverClass();
         $sDefaultHandlerClass::fatal();
