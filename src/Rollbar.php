@@ -6,6 +6,7 @@ use Nails\Common\ErrorHandler\Rollbar\Log;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Interfaces\ErrorHandlerDriver;
 use Nails\Common\Service\ErrorHandler;
+use Nails\Components;
 use Nails\Config;
 use Nails\Environment;
 use Nails\Factory;
@@ -44,6 +45,7 @@ class Rollbar implements ErrorHandlerDriver
                     'access_token' => Config::get('ROLLBAR_ACCESS_TOKEN'),
                     'environment'  => Environment::get(),
                     'person_fn'    => '\Nails\Common\ErrorHandler\Rollbar::getPerson',
+                    'code_version' => Components::getApp()->version
                 ],
                 false,
                 false,
